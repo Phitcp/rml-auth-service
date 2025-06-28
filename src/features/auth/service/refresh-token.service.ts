@@ -7,9 +7,8 @@ import { RefreshTokenError } from '@auth/interface/error.response';
 import { AppContext } from '@shared/decorator/context.decorator';
 import { AppLogger } from '@shared/logger';
 import { basename } from 'path';
-import { GetUserTokenQueryDto, LogOutRequestDto } from '@auth/dto/request.dto';
-import { RotateTokenResponseDto } from '@auth/dto/response.dto';
 import { status } from '@grpc/grpc-js';
+import { GetUserTokenQuery, RotateTokenResponse } from '@auth/interface/auth.proto.interface';
 
 @Injectable()
 export class RefreshTokenService {
@@ -37,7 +36,7 @@ export class RefreshTokenService {
   async rotateToken(
     context: AppContext,
     { userId, sessionId, refreshToken },
-  ): Promise<RotateTokenResponseDto> {
+  ): Promise<RotateTokenResponse> {
     this.appLogger
       .addLogContext(context.traceId)
       .addMsgParam(basename(__filename))
@@ -110,7 +109,7 @@ export class RefreshTokenService {
     return true;
   }
 
-  async getTokenForUser(context: AppContext, { userId }: GetUserTokenQueryDto) {
+  async getTokenForUser(context: AppContext, { userId }: GetUserTokenQuery) {
     this.appLogger
       .addLogContext(context.traceId)
       .addMsgParam(basename(__filename))
@@ -123,7 +122,7 @@ export class RefreshTokenService {
     };
   }
 
-  async logOut(context: AppContext, { userId, sessionId }: LogOutRequestDto) {
+  async logOut(context: AppContext, { userId, sessionId }): Promise<any> {
     this.appLogger
       .addLogContext(context.traceId)
       .addMsgParam(basename(__filename))

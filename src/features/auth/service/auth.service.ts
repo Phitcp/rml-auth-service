@@ -1,7 +1,5 @@
 import { Injectable } from '@nestjs/common';
 import { UserRepository } from '@root/repositories/user.repository';
-import { LoginRequestDto, RegisterRequestDto } from '../dto/request.dto';
-import { LoginResponseDto, RegisterResponseDto } from '@auth/dto/response.dto';
 import {
   LoginFailedError,
   RegisterFailedError,
@@ -15,6 +13,7 @@ import _ from 'lodash';
 import { RefreshTokenService } from './refresh-token.service';
 import { RefreshTokenRepository } from '@repositories/refreshToken.repository';
 import { status } from '@grpc/grpc-js';
+import { LoginRequest, LoginResponse, RegisterRequest, RegisterResponse } from '@auth/interface/auth.proto.interface';
 
 @Injectable()
 export class AuthService {
@@ -26,8 +25,8 @@ export class AuthService {
   ) {}
   async registerUser(
     context: AppContext,
-    { email, username, password }: RegisterRequestDto,
-  ): Promise<RegisterResponseDto> {
+    { email, username, password }: RegisterRequest,
+  ): Promise<RegisterResponse> {
     this.appLogger
       .addLogContext(context.traceId)
       .addMsgParam(basename(__filename))
@@ -73,8 +72,8 @@ export class AuthService {
 
   async login(
     context: AppContext,
-    { username, password }: LoginRequestDto,
-  ): Promise<LoginResponseDto> {
+    { username, password }: LoginRequest,
+  ): Promise<LoginResponse> {
     this.appLogger
       .addLogContext(context.traceId)
       .addMsgParam(basename(__filename))
