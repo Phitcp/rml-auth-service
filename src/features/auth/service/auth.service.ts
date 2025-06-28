@@ -14,6 +14,7 @@ import bcrypt from 'bcrypt';
 import _ from 'lodash';
 import { RefreshTokenService } from './refresh-token.service';
 import { RefreshTokenRepository } from '@repositories/refreshToken.repository';
+import { status } from '@grpc/grpc-js';
 
 @Injectable()
 export class AuthService {
@@ -39,7 +40,10 @@ export class AuthService {
 
     if (usedEmail) {
       this.appLogger.error('Failed register: Existed email');
-      throw new RegisterFailedError('Email already register');
+      throw new RegisterFailedError({
+        errorCode: status.ALREADY_EXISTS,
+        details: 'Email already register',
+      });
     }
 
     const usedUserName = await this.userRepository.findOne({
@@ -48,7 +52,10 @@ export class AuthService {
 
     if (usedUserName) {
       this.appLogger.error('Failed register: Existed username');
-      throw new RegisterFailedError('Email already register');
+      throw new RegisterFailedError({
+        errorCode: status.ALREADY_EXISTS,
+        details: 'Username already register',
+      });
     }
     const hashedPassword = await bcrypt.hash(password, 10);
 
@@ -78,14 +85,20 @@ export class AuthService {
 
     if (!foundUser) {
       this.appLogger.log('Failed login: Not found user');
-      throw new LoginFailedError('Wrong credential');
+      throw new LoginFailedError({
+        errorCode: status.UNAUTHENTICATED,
+        details: 'Wrong credential',
+      });
     }
 
     const isMatchPassword = await bcrypt.compare(password, foundUser.password);
 
     if (!isMatchPassword) {
       this.appLogger.log('Failed login: Not match password');
-      throw new LoginFailedError('Wrong credential');
+      throw new LoginFailedError({
+        errorCode: status.UNAUTHENTICATED,
+        details: 'Wrong credential',
+      });
     }
 
     const { accessToken, refreshTokenInfo } =

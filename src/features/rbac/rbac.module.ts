@@ -1,25 +1,33 @@
 // app.module.ts (API Gateway)
 import { Module } from '@nestjs/common';
-import { ClientsModule, Transport } from '@nestjs/microservices';
-import { join } from 'path';
 import { RBACController } from './controller/rbac.controller';
+import { ResourcesRepository } from '@repositories/resources.repository';
+import { RoleRepository } from '@repositories/role.repository';
+import { UserRepository } from '@repositories/user.repository';
+import { RBACService } from './service/rbac.service';
+import { MongooseModule } from '@nestjs/mongoose';
+import { Resource, ResourceSchema } from '@schemas/resources.schema';
+import { Role, RoleSchema } from '@schemas/role.schema';
+import { User, UserSchema } from '@schemas/user.schema';
+import { AppLogger } from '@shared/logger';
 
 @Module({
   imports: [
-    ClientsModule.register([
-      {
-        name: 'RBAC_PACKAGE',
-        transport: Transport.GRPC,
-        options: {
-          package: 'rbac',
-          protoPath: 'dist/features/rbac/proto/rbac.proto',
-          url: '0.0.0.0:4001',
-        },
-      },
-    ]),
+    MongooseModule.forFeature([
+      {name: Resource.name, schema: ResourceSchema},
+      {name: Role.name, schema: RoleSchema},
+      {name: User.name, schema: UserSchema}
+    ])
   ],
   controllers: [
     RBACController
+  ],
+  providers: [
+    ResourcesRepository,
+    RoleRepository,
+    UserRepository,
+    RBACService,
+    AppLogger
   ]
 })
 export class RBACModule {}

@@ -1,15 +1,13 @@
-import { MiddlewareConsumer, Module, NestModule } from '@nestjs/common';
+import { Module } from '@nestjs/common';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { AuthModule } from './features/auth/auth.module';
 import { AppLogger } from './shared-libs/logger';
-import { APP_FILTER } from '@nestjs/core';
-import { ExceptionHandler } from './shared-libs/exception-filter';
-import { RequestLogMiddleWare } from './shared-libs/middlewares/request-log.middleware';
 import { ConfigService } from '@nestjs/config';
 import { AppConfigModule } from './config/config.module';
 import { MongooseModule } from '@nestjs/mongoose';
 import { RBACModule } from './features/rbac/rbac.module';
+import { GrpcLogInterceptor } from '@shared/middlewares/grpc-log.interceptor';
 
 @Module({
   imports: [
@@ -40,17 +38,14 @@ import { RBACModule } from './features/rbac/rbac.module';
   controllers: [AppController],
   providers: [
     AppService,
-    ConfigService,
     AppLogger,
-    {
-      provide: APP_FILTER,
-      useClass: ExceptionHandler,
-    },
+    ConfigService,
+    // {
+    //   provide: APP_FILTER,
+    //   useClass: GRPCExceptionFilter
+    // },
+    GrpcLogInterceptor,
   ],
   exports: [AppLogger],
 })
-export class AppModule implements NestModule {
-  configure(consumer: MiddlewareConsumer) {
-    consumer.apply(RequestLogMiddleWare).forRoutes('*');
-  }
-}
+export class AppModule {}

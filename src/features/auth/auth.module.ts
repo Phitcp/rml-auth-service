@@ -1,17 +1,18 @@
 import { Module } from '@nestjs/common';
 import { AuthService } from './service/auth.service';
-import { AuthController } from './controller/auth.controller';
+import { AuthGrpcController } from './controller/auth.grpc.controller';
 import { MongooseModule } from '@nestjs/mongoose';
 import { User, UserSchema } from '@root/schemas/user.schema';
 import { UserRepository } from '@root/repositories/user.repository';
 import { AppLogger } from '@shared/logger';
 import { RefreshTokenService } from './service/refresh-token.service';
 import { RefreshTokenRepository } from '@repositories/refreshToken.repository';
+import { RefreshToken, RefreshTokenSchema } from '@schemas/refreshToken.schema';
 import { JwtModule } from '@nestjs/jwt';
 import { AppConfigModule } from '@app/config/config.module';
 import { ConfigService } from '@nestjs/config';
-import { RefreshToken, RefreshTokenSchema } from '@schemas/refreshToken.schema';
-import { JwtGuard } from '@shared/guard/jwt-auth.guard';
+import { APP_FILTER } from '@nestjs/core';
+import { GRPCExceptionFilter } from '@shared/exception-filter/grpc-exception-filter';
 
 @Module({
   imports: [
@@ -39,14 +40,13 @@ import { JwtGuard } from '@shared/guard/jwt-auth.guard';
       },
     }),
   ],
-  controllers: [AuthController],
+  controllers: [AuthGrpcController],
   providers: [
     AuthService,
     UserRepository,
-    AppLogger,
     RefreshTokenService,
     RefreshTokenRepository,
-    JwtGuard,
+    AppLogger,
   ],
 })
 export class AuthModule {}

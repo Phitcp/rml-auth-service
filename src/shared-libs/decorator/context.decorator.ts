@@ -1,20 +1,20 @@
-import { createParamDecorator, ExecutionContext } from '@nestjs/common';
+import { Metadata } from '@grpc/grpc-js';
+import { createParamDecorator } from '@nestjs/common';
+
+export interface UserContext {
+  userId: string;
+}
 
 export interface AppContext {
   traceId: string;
-  token: string;
+  user?: UserContext;
 }
 
-export const Context = createParamDecorator(
-  (data: unknown, ctx: ExecutionContext): AppContext => {
-    const request = ctx.switchToHttp().getRequest();
+export const getContext = (metadata: Metadata): AppContext => {
+  const data = metadata.getMap();
 
-    const token = request.get('Authorization');
-    const traceId = request.get('x-request-id');
-
-    return {
-      traceId,
-      token,
-    };
-  },
-);
+  return {
+    traceId: String(data['x-trace-id']),
+    user: data['user'] ? JSON.parse(String(data['user'])) : {},
+  };
+};

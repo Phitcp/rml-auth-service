@@ -1,19 +1,29 @@
-import { HttpException, HttpStatus } from '@nestjs/common';
+import { status } from '@grpc/grpc-js';
+import { RpcException } from '@nestjs/microservices';
 
-export class RegisterFailedError extends HttpException {
-  constructor(msg = 'Register Failed', code = HttpStatus.BAD_REQUEST) {
-    super(msg, code);
+export class RegisterFailedError extends RpcException {
+  constructor(errObject: { errorCode: number; details: string }) {
+    super({
+      error: errObject.errorCode || status.ALREADY_EXISTS,
+      details: errObject.details || 'Register failed',
+    });
   }
 }
 
-export class LoginFailedError extends HttpException {
-  constructor(msg = 'Login Failed', code = HttpStatus.FORBIDDEN) {
-    super(msg, code);
+export class LoginFailedError extends RpcException {
+  constructor(errObject: { errorCode: number; details: string }) {
+    super({
+      error: errObject.errorCode || status.UNAUTHENTICATED,
+      details: errObject.details || 'Login failed',
+    });
   }
 }
 
-export class RefreshTokenError extends HttpException {
-  constructor(msg = 'Refresh Failed', code = HttpStatus.NOT_ACCEPTABLE) {
-    super(msg, code);
+export class RefreshTokenError extends RpcException {
+  constructor(errObject: { errorCode: number; details: string }) {
+    super({
+      error: errObject.errorCode || status.UNKNOWN,
+      details: errObject.details || 'Refresh token failed',
+    });
   }
 }
