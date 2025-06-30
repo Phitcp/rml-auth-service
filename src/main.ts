@@ -10,7 +10,7 @@ async function bootstrap() {
   const logger = app.get(AppLogger);
 
   // RBAC microservice
-  const rbacMicroservice = app.connectMicroservice({
+  app.connectMicroservice({
     transport: Transport.GRPC,
     options: {
       package: 'rbac',
@@ -26,8 +26,7 @@ async function bootstrap() {
     },
   });
 
-  // Auth microservice
-  const authMicroservice = app.connectMicroservice({
+  app.connectMicroservice({
     transport: Transport.GRPC,
     options: {
       package: 'auth',

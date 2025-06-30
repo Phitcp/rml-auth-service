@@ -7,6 +7,8 @@ export class Resource extends Document {
   @Prop({ required: true, unique: true })
   resource_name: string;
 
+  @Prop({ required: true, unique: true })
+  resource_slug: string;
   // Optional description
   @Prop()
   description?: string;

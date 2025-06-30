@@ -7,6 +7,12 @@ export class Grant extends Document {
   @Prop({ type: Types.ObjectId, ref: 'Role', required: true })
   role: Types.ObjectId;
 
+  @Prop({ required: true })
+  role_slug: string;
+
+  @Prop({ required: true })
+  resource_slug: string;
+  
   // Foreign key to Resource
   @Prop({ type: Types.ObjectId, ref: 'Resource', required: true })
   resource: Types.ObjectId;
