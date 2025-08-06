@@ -4,7 +4,7 @@ import { ResourcesRepository } from '@repositories/resources.repository';
 import { RoleRepository } from '@repositories/role.repository';
 import { UserRepository } from '@repositories/user.repository';
 import { AppLogger } from '@shared/logger';
-import { ModifiedRolesFailedError } from '../interface/error.response';
+import { ModifiedRolesFailedError } from '@interface/error.response';
 import {
   CreateResourcesRequest,
   CreateResourcesResponse,
@@ -18,7 +18,7 @@ import {
   RoleCheckResponse,
   UserPermissionsRequest,
   UserPermissionsResponse,
-} from '../interface/rbac.proto.interface';
+} from '../../../interface/rbac.proto.interface';
 import { GrantRepository } from '@repositories/grant.repository';
 import { Types } from 'mongoose';
 import { AppContext } from '@shared/decorator/context.decorator';
@@ -119,7 +119,7 @@ export class RBACService {
       const userPermissions = await this.userRepository.getRoleListForUser(
         user.userId,
       );
-
+ 
       const response = {
         permissions: userPermissions,
       }
@@ -142,18 +142,16 @@ export class RBACService {
         .addLogContext(context.traceId)
         .addMsgParam(basename(__filename))
         .addMsgParam('createRole')
-        .log(`Will create role: ${payload.role} with slug: ${payload.slug}`);
+        .log(`Will create role: ${payload.role}`);
 
       const newRole = await this.rolesRepository.createOne({
-        role_name: payload.role,
-        role_slug: payload.slug,
+        role: payload.role,
         description: payload.description,
       });
 
       this.appLogger.log('Did create role success');
       return {
-        role: newRole.role_name,
-        slug: newRole.role_slug,
+        role: newRole.role,
         description: newRole.description ?? '',
       };
     } catch (error) {
@@ -171,16 +169,14 @@ export class RBACService {
         .addLogContext(context.traceId)
         .addMsgParam(basename(__filename))
         .addMsgParam('createResource')
-        .log(`Will create resource: ${payload.name}`);
+        .log(`Will create resource: ${payload.resource}`);
       const newResource = await this.resourcesRepository.createOne({
-        resource_name: payload.name,
+        resource: payload.resource,
         description: payload.description,
-        resource_slug: payload.slug,
       });
       this.appLogger.log('Did create resource success');
       return {
-        slug: newResource.resource_slug,
-        name: newResource.resource_name,
+        resource: newResource.resource,
         description: newResource.description ?? '',
       };
     } catch (error) {
@@ -188,7 +184,7 @@ export class RBACService {
       throw new ModifiedRolesFailedError();
     }
   }
-
+  
   async grantAccessToRole(
     context: AppContext,
     payload: GrantAccessToRoleRequest,
@@ -202,7 +198,7 @@ export class RBACService {
           `Will grant access to role: ${payload.role} for resource: ${payload.resource} with actions: ${payload.actions.join(', ')}`,
         );
       const foundResource = await this.resourcesRepository.findOne({
-        resource_name: payload.resource,
+        resource: payload.resource,
       });
       if (!foundResource) {
         this.appLogger.error(`RBAC grant access failed: Resource not found`);
@@ -210,23 +206,21 @@ export class RBACService {
       }
 
       const foundRole = await this.rolesRepository.findOne({
-        role_name: payload.role,
+        role: payload.role,
       });
       if (!foundRole) {
         this.appLogger.error(`RBAC grant access failed: Role not found`);
         throw new ModifiedRolesFailedError();
       }
       const newGrant = await this.grantsRepository.createOne({
-        role: foundRole._id as Types.ObjectId,
-        role_slug: foundRole.role_slug,
-        resource_slug: foundResource.resource_slug,
-        resource: foundResource._id as Types.ObjectId,
+        role: foundRole.role,
+        resource: foundResource.resource,
         actions: payload.actions,
       });
       this.appLogger.log('Did grant access to role success');
       return {
-        role: newGrant.role_slug.toString(),
-        resource: newGrant.resource_slug.toString(),
+        role: newGrant.role,
+        resource: newGrant.resource,
         actions: newGrant.actions,
       };
     } catch (error) {
@@ -277,8 +271,8 @@ export class RBACService {
       existingGrant.actions = payload.actions;
       await existingGrant.save();
       return {
-        role: existingGrant.role_slug,
-        resource: existingGrant.resource_slug,
+        role: existingGrant.role,
+        resource: existingGrant.resource,
         actions: existingGrant.actions,
       };
     } catch (error) {

@@ -3,26 +3,28 @@ import { v4 } from 'uuid';
 import * as bcrypt from 'bcrypt';
 import { RefreshTokenRepository } from '@repositories/refreshToken.repository';
 import { JwtService } from '@nestjs/jwt';
-import { RefreshTokenError } from '@auth/interface/error.response';
+import { RefreshTokenError } from '@root/interface/error.response';
 import { AppContext } from '@shared/decorator/context.decorator';
 import { AppLogger } from '@shared/logger';
 import { basename } from 'path';
 import { status } from '@grpc/grpc-js';
-import { GetUserTokenQuery, RotateTokenResponse } from '@auth/interface/auth.proto.interface';
+import { GetUserTokenQuery, RotateTokenResponse } from '@root/interface/auth.proto.interface';
+import { UserRepository } from '@repositories/user.repository';
 
 @Injectable()
 export class RefreshTokenService {
   constructor(
     private refreshTokenRepository: RefreshTokenRepository,
+    private userRepository: UserRepository,
     private jwtService: JwtService,
     private appLogger: AppLogger,
   ) {}
 
-  async issueTokenPair({ userId }) {
+  async issueTokenPair({ slugId }) {
     const refreshToken = v4();
     const tokenHash = await bcrypt.hash(refreshToken, 10);
     const expiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000);
-    const accessToken = this.jwtService.sign({ userId }, { expiresIn: '5m' });
+    const accessToken = this.jwtService.sign({ slugId }, { expiresIn: '5m' });
     return {
       accessToken,
       refreshTokenInfo: {
@@ -85,7 +87,15 @@ export class RefreshTokenService {
       });
     }
 
-    const { accessToken, refreshTokenInfo } = await this.issueTokenPair({ userId });
+    const user = await this.userRepository.findOne({ userId });
+    if (!user) {
+      this.appLogger.error(`FAILED rotate token for user ${userId}: user not found`);
+      throw new RefreshTokenError({
+        errorCode: status.NOT_FOUND,
+        details: 'User not found',
+      });
+    }
+    const { accessToken, refreshTokenInfo } = await this.issueTokenPair({ slugId: user.slugId });
     record.usedTokenHashes.push(record.tokenHash);
     record.expiresAt = refreshTokenInfo.expiresAt;
     record.tokenHash = refreshTokenInfo.tokenHash;
@@ -109,14 +119,14 @@ export class RefreshTokenService {
     return true;
   }
 
-  async getTokenForUser(context: AppContext, { userId }: GetUserTokenQuery) {
+  async getTokenForUser(context: AppContext, { slugId }: GetUserTokenQuery) {
     this.appLogger
       .addLogContext(context.traceId)
       .addMsgParam(basename(__filename))
       .addMsgParam('getTokenForUser');
-    this.appLogger.log(`WILL get token for user ${userId}`);
-    const result = await this.refreshTokenRepository.findMany({ userId });
-    this.appLogger.log(`DID get token for user ${userId}`);
+    this.appLogger.log(`WILL get token for user ${slugId}`);
+    const result = await this.refreshTokenRepository.findMany({ userId: slugId });
+    this.appLogger.log(`DID get token for user ${slugId}`);
     return {
       tokens: result.map((data) => data.userId),
     };

@@ -6,6 +6,8 @@
     "paths": {
       "@auth/*": ["./src/features/auth/*"],
       "@shared/*": ["./src/shared-libs/*"],
+      "@interface/*": ["./src/interface/*"],
+      "@proto/*": ["./src/proto/*"],
       "@shared/constant": ["./src/shared-libs/constant/common.ts"],
       "@shared/logger": ["./src/shared-libs/logger/index.ts"],
       "@shared/middleware": ["./src/shared-libs/middlewares/*"],

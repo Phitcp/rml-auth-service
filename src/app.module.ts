@@ -40,10 +40,6 @@ import { GrpcLogInterceptor } from '@shared/middlewares/grpc-log.interceptor';
     AppService,
     AppLogger,
     ConfigService,
-    // {
-    //   provide: APP_FILTER,
-    //   useClass: GRPCExceptionFilter
-    // },
     GrpcLogInterceptor,
   ],
   exports: [AppLogger],

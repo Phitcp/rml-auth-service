@@ -14,7 +14,7 @@ async function bootstrap() {
     transport: Transport.GRPC,
     options: {
       package: 'rbac',
-      protoPath: join(__dirname, '../features/rbac/proto/rbac.proto'),
+      protoPath: 'src/proto/rbac.proto',
       url: '0.0.0.0:4002',
       loader: {
         keepCase: true,
@@ -30,7 +30,7 @@ async function bootstrap() {
     transport: Transport.GRPC,
     options: {
       package: 'auth',
-      protoPath: join(__dirname, '../features/auth/proto/auth.proto'),
+      protoPath: 'src/proto/auth.proto',
       url: '0.0.0.0:4001',
       loader: {
         keepCase: true,

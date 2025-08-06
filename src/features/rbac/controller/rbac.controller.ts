@@ -17,7 +17,7 @@ import {
   RoleCheckResponse,
   UserPermissionsRequest,
   UserPermissionsResponse,
-} from '../interface/rbac.proto.interface';
+} from '../../../interface/rbac.proto.interface';
 import { getContext } from '@shared/decorator/context.decorator';
 import { Metadata } from '@grpc/grpc-js';
 

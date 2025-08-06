@@ -28,7 +28,7 @@ import { redisStore } from 'cache-manager-redis-store';
       host: 'localhost',
       port: 6379,
       ttl: 60
-    })
+    }),
   ],
   controllers: [
     RBACController

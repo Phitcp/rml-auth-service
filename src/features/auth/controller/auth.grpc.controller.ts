@@ -15,11 +15,6 @@ export class AuthGrpcController {
     private readonly authService: AuthService,
     private readonly refreshTokenService: RefreshTokenService,
   ) {}
- 
-  @GrpcMethod('AuthService', 'Register')
-  async register(data: any, metadata: Metadata) {
-    return this.authService.registerUser(getContext(metadata), data);
-  }
 
   @GrpcMethod('AuthService', 'Login')
   async login(data: any, metadata: Metadata) {
@@ -33,6 +28,21 @@ export class AuthGrpcController {
 
   @GrpcMethod('AuthService', 'GetUserTokens')
   async getUserTokens(data: any, metadata: Metadata) {
-    return this.refreshTokenService.getTokenForUser( getContext(metadata), data);
+    return this.refreshTokenService.getTokenForUser(getContext(metadata), data);
+  }
+
+  @GrpcMethod('AuthService', 'RegisterOtp')
+  async registerOtp(data: any, metadata: Metadata) {
+    return this.authService.registerOtp(getContext(metadata), data);
+  }
+
+  @GrpcMethod('AuthService', 'VerifyRegisterOtp')
+  async verifyRegisterOtp(data: any, metadata: Metadata) {
+    return this.authService.verifyRegisterOtp(getContext(metadata), data);
+  }
+
+    @GrpcMethod('AuthService', 'GetUserFromSlug')
+  async getUserFromSlug(data: any, metadata: Metadata) {
+    return this.authService.getUserFromSlug(getContext(metadata), data);
   }
 }
