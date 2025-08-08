@@ -11,11 +11,7 @@ import { RefreshToken, RefreshTokenSchema } from '@schemas/refreshToken.schema';
 import { JwtModule } from '@nestjs/jwt';
 import { AppConfigModule } from '@app/config/config.module';
 import { ConfigService } from '@nestjs/config';
-import { APP_FILTER } from '@nestjs/core';
-import { GRPCExceptionFilter } from '@shared/exception-filter/grpc-exception-filter';
 import { ClientsModule, Transport } from '@nestjs/microservices';
-import { CacheModule } from '@nestjs/cache-manager';
-import { redisStore } from 'cache-manager-redis-store';
 
 @Module({
   imports: [
@@ -53,12 +49,6 @@ import { redisStore } from 'cache-manager-redis-store';
         },
       },
     ]),
-    CacheModule.register({
-      store: redisStore as any,
-      host: 'localhost',
-      port: 6379,
-      ttl: 60,
-    }),
   ],
   controllers: [AuthGrpcController],
   providers: [

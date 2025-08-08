@@ -1,3 +1,4 @@
+import { RedisService } from './../../../redis/redis.service';
 import { HttpException, Inject, Injectable } from '@nestjs/common';
 import { RpcException } from '@nestjs/microservices';
 import { ResourcesRepository } from '@repositories/resources.repository';
@@ -20,11 +21,8 @@ import {
   UserPermissionsResponse,
 } from '../../../interface/rbac.proto.interface';
 import { GrantRepository } from '@repositories/grant.repository';
-import { Types } from 'mongoose';
 import { AppContext } from '@shared/decorator/context.decorator';
 import { basename } from 'path';
-import { CACHE_MANAGER } from '@nestjs/cache-manager';
-import { Cache } from 'cache-manager';
 
 @Injectable()
 export class RBACService {
@@ -34,7 +32,7 @@ export class RBACService {
     private rolesRepository: RoleRepository,
     private grantsRepository: GrantRepository,
     private userRepository: UserRepository,
-    @Inject(CACHE_MANAGER) private cacheManager: Cache
+    private redisClient: RedisService,
   ) {}
   async checkPermission(
     context: AppContext,
@@ -48,11 +46,11 @@ export class RBACService {
         .log(
           `Will check permission for user ${payload.userId}:: resource ${payload.resource}:: action ${payload.action}`,
         );
-
+      const permissionCachePrefix = 'Permission::';
       const userPermissions = await this.getUserPermissions(context, payload);
 
       const allowResource = userPermissions.permissions.find(
-        (per) => (per.resource = payload.resource),
+        (per) => (per.resource === payload.resource),
       );
 
       if (!allowResource) {
@@ -99,14 +97,14 @@ export class RBACService {
         .addMsgParam(basename(__filename))
         .addMsgParam('getUserPermissions')
         .log('Will get permission list for user');
-        
-      const cacheData = await this.cacheManager.get<UserPermissionsResponse>(`${redisPrefix}${payload.userId}`)
 
-      if(cacheData) {
-        this.appLogger.log('Did return permission list from cache')
-        return cacheData
+      const cacheData = await this.redisClient.get<UserPermissionsResponse>(`${redisPrefix}${payload.userId}`);
+
+      if (cacheData) {
+        this.appLogger.log('Did return permission list from cache');
+        return cacheData;
       }
-
+      
       const user = await this.userRepository.findOne({
         userId: payload.userId,
       });
@@ -122,11 +120,11 @@ export class RBACService {
  
       const response = {
         permissions: userPermissions,
-      }
+      };
 
       this.appLogger.log('Did get permission list for user');
-      this.cacheManager.set(`${redisPrefix}${payload.userId}`, response, 50 * 1000)
-      return response
+      this.redisClient.set(`${redisPrefix}${payload.userId}`, response, 50);
+      return response;
     } catch (error) {
       this.appLogger.error(`RBAC check failed: ${JSON.stringify(error)}`);
       throw new ModifiedRolesFailedError();

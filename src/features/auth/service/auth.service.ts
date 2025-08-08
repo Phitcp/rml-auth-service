@@ -30,12 +30,11 @@ import {
 import { CharacterServiceClient } from '@interface/character.proto.interface';
 import { GrpcClient } from '@shared/utilities/grpc-client';
 import { firstValueFrom } from 'rxjs';
-import { CACHE_MANAGER } from '@nestjs/cache-manager';
-import { Cache } from 'cache-manager';
 import { mailTransporter } from '@shared/utilities';
 import { APP_ROLE } from '@shared/constant/common';
 import { customAlphabet } from 'nanoid';
 import { COUNTRY_CODE } from '@shared/constant/common';
+import { RedisService } from '@root/redis/redis.service';
 const OtpTokenRedisPreFix = 'otp_token::';
 
 @Injectable()
@@ -46,7 +45,7 @@ export class AuthService {
     private refreshTokenRepository: RefreshTokenRepository,
     private refreshTokenService: RefreshTokenService,
     private appLogger: AppLogger,
-    @Inject(CACHE_MANAGER) private cacheManager: Cache,
+     private redis: RedisService,
   ) {
     const grpcClient = new GrpcClient<CharacterServiceClient>({
       package: 'character',
@@ -197,7 +196,7 @@ export class AuthService {
     this.appLogger.log(
       `Will set otp token: ${otpToken} with value: ${otp} to cache`,
     );
-    await this.cacheManager.set(otpToken, otp, 60 * 5 * 1000); // 5 minutes expiration
+    await this.redis.set(otpToken, otp, 60 * 5 * 1000); // 5 minutes expiration
     this.appLogger.log(
       `Did set otp token: ${otpToken} with value: ${otp} to cache`,
     );
@@ -218,7 +217,7 @@ export class AuthService {
       .addMsgParam('verifyOtp');
     this.appLogger.log('Will verifyOtp');
     const otpToken = `${OtpTokenRedisPreFix}${data.email}`;
-    const cachedOtp = await this.cacheManager.get(otpToken);
+    const cachedOtp = await this.redis.get(otpToken);
     this.appLogger.log(`Will get and verify otp token: ${otpToken} from cache`);
     if (!cachedOtp) {
       this.appLogger.error('Failed verifyOtp: OTP expired or not found');
@@ -237,7 +236,7 @@ export class AuthService {
     }
 
     this.appLogger.log('Did verifyOtp successfully');
-    await this.cacheManager.del(otpToken); // Clear the OTP after successful verification
+    await this.redis.del(otpToken); // Clear the OTP after successful verification
     this.appLogger.log(`Did delete otp token: ${otpToken} from cache`);
 
     // Create new user with default username and password

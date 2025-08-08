@@ -1,3 +1,4 @@
+import { RedisService } from './../../redis/redis.service';
 // app.module.ts (API Gateway)
 import { Module } from '@nestjs/common';
 import { RBACController } from './controller/rbac.controller';
@@ -12,8 +13,6 @@ import { User, UserSchema } from '@schemas/user.schema';
 import { AppLogger } from '@shared/logger';
 import { Grant, GrantSchema } from '@schemas/grants.schema';
 import { GrantRepository } from '@repositories/grant.repository';
-import { CacheModule } from '@nestjs/cache-manager';
-import { redisStore } from 'cache-manager-redis-store';
 
 @Module({
   imports: [
@@ -22,13 +21,7 @@ import { redisStore } from 'cache-manager-redis-store';
       {name: Role.name, schema: RoleSchema},
       {name: User.name, schema: UserSchema},
       {name: Grant.name, schema: GrantSchema}
-    ]),
-    CacheModule.register({
-      store: redisStore as any,
-      host: 'localhost',
-      port: 6379,
-      ttl: 60
-    }),
+    ])
   ],
   controllers: [
     RBACController
@@ -39,7 +32,7 @@ import { redisStore } from 'cache-manager-redis-store';
     UserRepository,
     RBACService,
     AppLogger,
-    GrantRepository
+    GrantRepository,
   ]
 })
 export class RBACModule {}

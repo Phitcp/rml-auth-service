@@ -8,6 +8,7 @@ import { AppConfigModule } from './config/config.module';
 import { MongooseModule } from '@nestjs/mongoose';
 import { RBACModule } from './features/rbac/rbac.module';
 import { GrpcLogInterceptor } from '@shared/middlewares/grpc-log.interceptor';
+import { RedisModule } from './redis/redis.module';
 
 @Module({
   imports: [
@@ -34,6 +35,7 @@ import { GrpcLogInterceptor } from '@shared/middlewares/grpc-log.interceptor';
         };
       },
     }),
+    RedisModule
   ],
   controllers: [AppController],
   providers: [

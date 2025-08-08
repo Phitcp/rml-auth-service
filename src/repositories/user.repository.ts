@@ -37,7 +37,7 @@ export class UserRepository extends MongooseRepositoryBase<User> {
       },
       {
         $project: {
-            _id: 0,
+          _id: 0,
           resource: '$grants.resource',
           actions: '$grants.actions',
         },
