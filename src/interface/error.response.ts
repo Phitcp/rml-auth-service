@@ -50,3 +50,17 @@ export class ModifiedRolesFailedError extends RpcException {
     });
   }
 }
+
+export class NoPermissionError extends RpcException {
+  constructor(
+    errObject = {
+      errorCode: status.PERMISSION_DENIED,
+      details: 'No permission',
+    },
+  ) {
+    super({
+      error: errObject.errorCode || status.PERMISSION_DENIED,
+      details: errObject.details || 'No permission',
+    });
+  }
+}

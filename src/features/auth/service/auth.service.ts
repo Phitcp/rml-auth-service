@@ -4,7 +4,7 @@ import {
   VerifyRegisterOtpRequest,
   VerifyRegisterOtpResponse,
 } from './../../../interface/auth.proto.interface';
-import { Inject, Injectable } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { UserRepository } from '@root/repositories/user.repository';
 import {
   AuthenticationFailed,
@@ -45,7 +45,7 @@ export class AuthService {
     private refreshTokenRepository: RefreshTokenRepository,
     private refreshTokenService: RefreshTokenService,
     private appLogger: AppLogger,
-     private redis: RedisService,
+    private redis: RedisService,
   ) {
     const grpcClient = new GrpcClient<CharacterServiceClient>({
       package: 'character',
@@ -236,7 +236,7 @@ export class AuthService {
     }
 
     this.appLogger.log('Did verifyOtp successfully');
-    await this.redis.del(otpToken); // Clear the OTP after successful verification
+    await this.redis.client.del(otpToken); // Clear the OTP after successful verification
     this.appLogger.log(`Did delete otp token: ${otpToken} from cache`);
 
     // Create new user with default username and password

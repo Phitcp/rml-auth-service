@@ -10,8 +10,8 @@ export const mailTransporter = () => {
   const transporter = nodemailer.createTransport({
     host: 'smtp.gmail.com', // Your SMTP host
     auth: {
-      user: 'caophi0123@gmail.com',
-      pass: 'grex ygec iufl tqzr',
+      user: 'username@gmail.com`',
+      pass: 'your-email-password',
     },
   });
 

@@ -1,5 +1,3 @@
-import { RedisService } from './../../redis/redis.service';
-// app.module.ts (API Gateway)
 import { Module } from '@nestjs/common';
 import { RBACController } from './controller/rbac.controller';
 import { ResourcesRepository } from '@repositories/resources.repository';

@@ -5,7 +5,7 @@ import { ResourcesRepository } from '@repositories/resources.repository';
 import { RoleRepository } from '@repositories/role.repository';
 import { UserRepository } from '@repositories/user.repository';
 import { AppLogger } from '@shared/logger';
-import { ModifiedRolesFailedError } from '@interface/error.response';
+import { ModifiedRolesFailedError, NoPermissionError } from '@interface/error.response';
 import {
   CreateResourcesRequest,
   CreateResourcesResponse,
@@ -42,11 +42,10 @@ export class RBACService {
       this.appLogger
         .addLogContext(context.traceId)
         .addMsgParam(basename(__filename))
-        .addMsgParam('getUserPermissions')
+        .addMsgParam('checkPermission')
         .log(
           `Will check permission for user ${payload.userId}:: resource ${payload.resource}:: action ${payload.action}`,
         );
-      const permissionCachePrefix = 'Permission::';
       const userPermissions = await this.getUserPermissions(context, payload);
 
       const allowResource = userPermissions.permissions.find(
@@ -123,11 +122,11 @@ export class RBACService {
       };
 
       this.appLogger.log('Did get permission list for user');
-      this.redisClient.set(`${redisPrefix}${payload.userId}`, response, 50);
+      this.redisClient.set(`${redisPrefix}${payload.userId}`, response, 24 * 60 * 60); // cache user permission for 1 day
       return response;
     } catch (error) {
       this.appLogger.error(`RBAC check failed: ${JSON.stringify(error)}`);
-      throw new ModifiedRolesFailedError();
+      throw new NoPermissionError();
     }
   }
 

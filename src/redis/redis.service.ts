@@ -30,7 +30,7 @@ export class RedisService {
     }
   }
   
-  async del(key: string): Promise<void> {
-    await this.redisClient.del(key);
+  get client(): Redis {
+    return this.redisClient;
   }
 }
