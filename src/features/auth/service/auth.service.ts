@@ -35,7 +35,7 @@ import { APP_ROLE } from '@shared/constant/common';
 import { customAlphabet } from 'nanoid';
 import { COUNTRY_CODE } from '@shared/constant/common';
 import { RedisService } from '@root/redis/redis.service';
-const OtpTokenRedisPreFix = 'otp_token::';
+import { OtpToken_PreFix } from '../../../redis/constant';
 
 @Injectable()
 export class AuthService {
@@ -180,7 +180,7 @@ export class AuthService {
 
     const otp = Math.floor(Math.random() * 1_000_000);
 
-    const otpToken = `${OtpTokenRedisPreFix}${data.email}`;
+    const otpToken = `${OtpToken_PreFix}${data.email}`;
 
     this.appLogger.log(`Will send otp ${otp} to email: ${data.email}`);
 
@@ -216,7 +216,7 @@ export class AuthService {
       .addMsgParam(basename(__filename))
       .addMsgParam('verifyOtp');
     this.appLogger.log('Will verifyOtp');
-    const otpToken = `${OtpTokenRedisPreFix}${data.email}`;
+    const otpToken = `${OtpToken_PreFix}${data.email}`;
     const cachedOtp = await this.redis.get(otpToken);
     this.appLogger.log(`Will get and verify otp token: ${otpToken} from cache`);
     if (!cachedOtp) {

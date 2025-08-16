@@ -23,7 +23,7 @@ import {
 import { GrantRepository } from '@repositories/grant.repository';
 import { AppContext } from '@shared/decorator/context.decorator';
 import { basename } from 'path';
-
+import { PerMissionList_Prefix } from '@root/redis/constant'; 
 @Injectable()
 export class RBACService {
   constructor(
@@ -90,14 +90,13 @@ export class RBACService {
     payload: UserPermissionsRequest,
   ): Promise<UserPermissionsResponse> {
     try {
-      const redisPrefix = 'PerList::'
       this.appLogger
         .addLogContext(context.traceId)
         .addMsgParam(basename(__filename))
         .addMsgParam('getUserPermissions')
         .log('Will get permission list for user');
 
-      const cacheData = await this.redisClient.get<UserPermissionsResponse>(`${redisPrefix}${payload.userId}`);
+      const cacheData = await this.redisClient.get<UserPermissionsResponse>(`${PerMissionList_Prefix}${payload.userId}`);
 
       if (cacheData) {
         this.appLogger.log('Did return permission list from cache');
@@ -122,7 +121,7 @@ export class RBACService {
       };
 
       this.appLogger.log('Did get permission list for user');
-      this.redisClient.set(`${redisPrefix}${payload.userId}`, response, 24 * 60 * 60); // cache user permission for 1 day
+      this.redisClient.set(`${PerMissionList_Prefix}${payload.userId}`, response, 24 * 60 * 60); // cache user permission for 1 day
       return response;
     } catch (error) {
       this.appLogger.error(`RBAC check failed: ${JSON.stringify(error)}`);

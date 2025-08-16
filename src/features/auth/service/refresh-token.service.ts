@@ -8,8 +8,10 @@ import { AppContext } from '@shared/decorator/context.decorator';
 import { AppLogger } from '@shared/logger';
 import { basename } from 'path';
 import { status } from '@grpc/grpc-js';
-import { GetUserTokenQuery, RotateTokenResponse } from '@root/interface/auth.proto.interface';
+import { GetUserTokenQuery, logOutResponse, RotateTokenResponse } from '@root/interface/auth.proto.interface';
 import { UserRepository } from '@repositories/user.repository';
+import { RedisService } from '@root/redis/redis.service';
+import { BlackListedAccessToken_Prefix } from '@root/redis/constant';
 
 @Injectable()
 export class RefreshTokenService {
@@ -18,6 +20,7 @@ export class RefreshTokenService {
     private userRepository: UserRepository,
     private jwtService: JwtService,
     private appLogger: AppLogger,
+    private redis: RedisService,
   ) {}
 
   async issueTokenPair({ slugId }) {
@@ -132,7 +135,7 @@ export class RefreshTokenService {
     };
   }
 
-  async logOut(context: AppContext, { userId, sessionId }): Promise<any> {
+  async logOut(context: AppContext, { userId, sessionId, accessToken }): Promise<logOutResponse> {
     this.appLogger
       .addLogContext(context.traceId)
       .addMsgParam(basename(__filename))
@@ -140,10 +143,37 @@ export class RefreshTokenService {
     this.appLogger.log(
       `WILL log out for user ${userId} - session ${sessionId}`,
     );
-    const result = await this.refreshTokenRepository.deleteOne({ userId, sessionId });
+
+    // Decode the access token to get its expiration time
+    let tokenExp: number;
+    try {
+      const decoded = this.jwtService.decode(accessToken) as any;
+      tokenExp = decoded.exp;
+    } catch (error) {
+      this.appLogger.error(`Failed to decode access token: ${error.message}`);
+      tokenExp = Math.floor(Date.now() / 1000) + 300; 
+    }
+
+    // Calculate TTL for Redis (time until token naturally expires)
+    const currentTime = Math.floor(Date.now() / 1000);
+    const ttlSeconds = Math.max(0, tokenExp - currentTime);
+
+    // Add access token to blacklist in Redis
+    if (ttlSeconds > 0) {
+      await this.redis.set(`${BlackListedAccessToken_Prefix}${accessToken}`, true, ttlSeconds);
+      this.appLogger.log(`Added access token to blacklist with TTL ${ttlSeconds} seconds`);
+    }
+
+    // Delete the refresh token
+    await this.refreshTokenRepository.deleteOne({ userId, sessionId });
+    
     this.appLogger.log(
-      `DID log out for user ${userId} - session ${sessionId}}`,
+      `DID log out for user ${userId} - session ${sessionId}`,
     );
-    return result;
+    
+    return {
+      isSuccess: true,
+      message: 'Successfully logged out',
+    };
   }
 }

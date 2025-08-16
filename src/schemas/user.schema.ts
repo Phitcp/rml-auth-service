@@ -20,6 +20,12 @@ export class User extends Document {
 
   @Prop({ default: 'user' })
   role: string;
+
+  @Prop({default: 'offline'})
+  status: 'offline' | 'online' | 'banned';
+
+  @Prop({ default: Date.now })
+  lastActive: Date;
 }
 
 export const UserSchema = SchemaFactory.createForClass(User);

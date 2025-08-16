@@ -6,6 +6,7 @@ import { Metadata } from '@grpc/grpc-js';
 import { getContext } from '@shared/decorator/context.decorator';
 import { GrpcLogInterceptor } from '@shared/middlewares/grpc-log.interceptor';
 import { GRPCExceptionFilter } from '@shared/exception-filter/grpc-exception-filter';
+import { logOutRequest, logOutResponse } from '@interface/auth.proto.interface';
 
 @UseInterceptors(GrpcLogInterceptor)
 @UseFilters(GRPCExceptionFilter)
@@ -41,8 +42,13 @@ export class AuthGrpcController {
     return this.authService.verifyRegisterOtp(getContext(metadata), data);
   }
 
-    @GrpcMethod('AuthService', 'GetUserFromSlug')
+  @GrpcMethod('AuthService', 'GetUserFromSlug')
   async getUserFromSlug(data: any, metadata: Metadata) {
     return this.authService.getUserFromSlug(getContext(metadata), data);
+  }
+
+  @GrpcMethod('AuthService', 'LogOut')
+  async logOut(data: logOutRequest, metadata: Metadata): Promise<logOutResponse> {
+    return this.refreshTokenService.logOut(getContext(metadata), data);
   }
 }

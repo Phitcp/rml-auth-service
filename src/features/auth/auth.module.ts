@@ -12,6 +12,7 @@ import { JwtModule } from '@nestjs/jwt';
 import { AppConfigModule } from '@app/config/config.module';
 import { ConfigService } from '@nestjs/config';
 import { ClientsModule, Transport } from '@nestjs/microservices';
+import { RedisModule } from '@root/redis/redis.module';
 
 @Module({
   imports: [
@@ -49,6 +50,7 @@ import { ClientsModule, Transport } from '@nestjs/microservices';
         },
       },
     ]),
+    RedisModule,
   ],
   controllers: [AuthGrpcController],
   providers: [
