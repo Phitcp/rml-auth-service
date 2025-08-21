@@ -49,17 +49,6 @@ export interface LoginResponse {
   role: string;
 }
 
-export interface logOutRequest {
-  userId: string;
-  sessionId: string;
-  accessToken: string
-}
-
-export interface logOutResponse {
-  isSuccess: boolean;
-  message: string;
-}
-
 export interface RotateTokenRequest {
   userId: string;
   refreshToken: string;
@@ -80,21 +69,53 @@ export interface GetUserTokensResponse {
   tokens: string[];
 }
 
+export interface Character {
+  id: string;
+  characterName: string;
+  characterTitle: string;
+  level: number;
+  exp: number;
+  nextLevelExp: number;
+}
+
 export interface GetUserFromSlugRequest {
   slugId: string;
 }
 
 export interface GetUserFromSlugResponse {
   userId: string;
+  slugId: string;
   username: string;
   role: string;
   email: string;
+  character: Character | undefined;
+}
+
+export interface LogOutRequest {
+  userId: string;
+  sessionId: string;
+  accessToken: string;
+}
+
+export interface LogOutResponse {
+  isSuccess: boolean;
+  message: string;
+}
+
+export interface GetUserListFromSlugListRequest {
+  slugIds: string[];
+}
+
+export interface GetUserListFromSlugListResponse {
+  users: GetUserFromSlugResponse[];
 }
 
 export const AUTH_PACKAGE_NAME = "auth";
 
 export interface AuthServiceClient {
   login(request: LoginRequest): Observable<LoginResponse>;
+
+  logOut(request: LogOutRequest): Observable<LogOutResponse>;
 
   rotateToken(request: RotateTokenRequest): Observable<RotateTokenResponse>;
 
@@ -106,12 +127,13 @@ export interface AuthServiceClient {
 
   getUserFromSlug(request: GetUserFromSlugRequest): Observable<GetUserFromSlugResponse>;
 
-  logOut(request: logOutRequest): Observable<logOutResponse>;
-
+  getListUserInfoFromSlugs(request: GetUserListFromSlugListRequest): Observable<GetUserListFromSlugListResponse>;
 }
 
 export interface AuthServiceController {
   login(request: LoginRequest): Promise<LoginResponse> | Observable<LoginResponse> | LoginResponse;
+
+  logOut(request: LogOutRequest): Promise<LogOutResponse> | Observable<LogOutResponse> | LogOutResponse;
 
   rotateToken(
     request: RotateTokenRequest,
@@ -132,17 +154,26 @@ export interface AuthServiceController {
   getUserFromSlug(
     request: GetUserFromSlugRequest,
   ): Promise<GetUserFromSlugResponse> | Observable<GetUserFromSlugResponse> | GetUserFromSlugResponse;
+
+  getListUserInfoFromSlugs(
+    request: GetUserListFromSlugListRequest,
+  ):
+    | Promise<GetUserListFromSlugListResponse>
+    | Observable<GetUserListFromSlugListResponse>
+    | GetUserListFromSlugListResponse;
 }
 
 export function AuthServiceControllerMethods() {
   return function (constructor: Function) {
     const grpcMethods: string[] = [
       "login",
+      "logOut",
       "rotateToken",
       "getUserTokens",
       "registerOtp",
       "verifyRegisterOtp",
       "getUserFromSlug",
+      "getListUserInfoFromSlugs",
     ];
     for (const method of grpcMethods) {
       const descriptor: any = Reflect.getOwnPropertyDescriptor(constructor.prototype, method);

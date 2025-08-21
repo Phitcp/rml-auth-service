@@ -8,7 +8,7 @@ import { AppContext } from '@shared/decorator/context.decorator';
 import { AppLogger } from '@shared/logger';
 import { basename } from 'path';
 import { status } from '@grpc/grpc-js';
-import { GetUserTokenQuery, logOutResponse, RotateTokenResponse } from '@root/interface/auth.proto.interface';
+import { GetUserTokenQuery, LogOutResponse, RotateTokenResponse } from '@root/interface/auth.proto.interface';
 import { UserRepository } from '@repositories/user.repository';
 import { RedisService } from '@root/redis/redis.service';
 import { BlackListedAccessToken_Prefix } from '@root/redis/constant';
@@ -135,7 +135,7 @@ export class RefreshTokenService {
     };
   }
 
-  async logOut(context: AppContext, { userId, sessionId, accessToken }): Promise<logOutResponse> {
+  async logOut(context: AppContext, { userId, sessionId, accessToken }): Promise<LogOutResponse> {
     this.appLogger
       .addLogContext(context.traceId)
       .addMsgParam(basename(__filename))

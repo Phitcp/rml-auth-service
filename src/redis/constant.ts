@@ -4,4 +4,4 @@ export const BlackListedAccessToken_Prefix = 'blacklisted_token::';
 
 export const PerMissionList_Prefix = 'permission_list::';
 
-export const AccessToken_Prefix = 'accessToken::'
+export const UserInfo_Prefix = 'userInfo::'

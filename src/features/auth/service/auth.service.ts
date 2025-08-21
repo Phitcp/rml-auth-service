@@ -35,7 +35,7 @@ import { APP_ROLE } from '@shared/constant/common';
 import { customAlphabet } from 'nanoid';
 import { COUNTRY_CODE } from '@shared/constant/common';
 import { RedisService } from '@root/redis/redis.service';
-import { OtpToken_PreFix } from '../../../redis/constant';
+import { OtpToken_PreFix, UserInfo_Prefix } from '../../../redis/constant';
 
 @Injectable()
 export class AuthService {
@@ -311,7 +311,81 @@ export class AuthService {
         details: 'Not found user',
       });
     }
-    this.appLogger.log('DID found user')
-    return user;
+    const metaData = new Metadata();
+    metaData.add('x-trace-id', context.traceId);
+    const { character } = await firstValueFrom(
+      this.characterService.getCharacterProfile(
+        { userId: user.userId },
+        metaData,
+      ),
+    );
+    this.appLogger.log('DID found user');
+    const result: GetUserFromSlugResponse = {
+      userId: user.userId,
+      slugId: user.slugId,
+      username: user.username,
+      role: user.role,
+      email: user.email,
+      character,
+    };
+    return result;
+  }
+
+  async getListUserInfoFromSlugs(context: AppContext, payload: any) {
+    this.appLogger
+      .addLogContext(context.traceId)
+      .addMsgParam(basename(__filename))
+      .addMsgParam('getListUserInfoFromSlug');
+    this.appLogger.log('Will getListUserInfoFromSlug');
+
+    const userInfoList = await this.userRepository.findMany({
+      slugId: {
+        $in: payload.slugIds,
+      },
+    });
+
+    if (userInfoList.length === 0) {
+      this.appLogger.log('No users found for provided slugIds');
+      return { users: [] };
+    }
+
+    const metaData = new Metadata();
+    metaData.add('x-trace-id', context.traceId);
+
+    // Extract userIds for bulk character fetch
+    const userIds = userInfoList.map((user) => user.userId);
+
+    let charactersMap = new Map();
+    try {
+      // Fetch all characters in one bulk request
+      const { characters } = await firstValueFrom(
+        this.characterService.getCharacterProfileByBulk({ userIds }, metaData),
+      );
+
+      // Create a map for quick character lookup by userId
+      charactersMap = new Map(
+        characters.map((character) => [character.id, character]),
+      );
+    } catch (error) {
+      this.appLogger.warn(
+        `Failed to fetch characters in bulk: ${error.message}`,
+      );
+      // Continue without character data if the service is unavailable
+    }
+
+    // Map users with their corresponding character data
+    const usersWithCharacters = userInfoList.map((user) => ({
+      userId: user.userId,
+      slugId: user.slugId,
+      username: user.username,
+      role: user.role,
+      email: user.email,
+      character: charactersMap.get(user.userId) || undefined,
+    }));
+
+    this.appLogger.log(
+      `Did getListUserInfoFromSlug: ${usersWithCharacters.length} users found`,
+    );
+    return { users: usersWithCharacters };
   }
 }
