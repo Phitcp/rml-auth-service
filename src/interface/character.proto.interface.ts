@@ -1,8 +1,6 @@
 import { Metadata } from '@grpc/grpc-js';
 import { Observable } from 'rxjs';
 
-export const protobufPackage = 'character';
-
 export interface CreateCharacterProfileRequest {
   userId: string;
   userName: string;
@@ -61,4 +59,3 @@ export interface CharacterServiceClient {
   ): Observable<GetCharacterProfileByBulkResponse>;
 }
 
-export const CHARACTER_SERVICE_NAME = 'CharacterService';
