@@ -35,7 +35,7 @@ import { APP_ROLE } from '@shared/constant/common';
 import { customAlphabet } from 'nanoid';
 import { COUNTRY_CODE } from '@shared/constant/common';
 import { RedisService } from '@root/redis/redis.service';
-import { OtpToken_PreFix, UserInfo_Prefix } from '../../../redis/constant';
+import { OtpToken_PreFix } from '../../../redis/constant';
 
 @Injectable()
 export class AuthService {
